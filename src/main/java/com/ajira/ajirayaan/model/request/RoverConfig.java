@@ -1,6 +1,9 @@
-package com.ajira.ajirayaan.model;
+package com.ajira.ajirayaan.model.request;
 
 import com.ajira.ajirayaan.entity.InventoryItem;
+import com.ajira.ajirayaan.model.Location;
+import com.ajira.ajirayaan.model.Scenario;
+import com.ajira.ajirayaan.model.State;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;

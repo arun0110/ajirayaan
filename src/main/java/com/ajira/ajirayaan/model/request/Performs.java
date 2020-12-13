@@ -1,5 +1,6 @@
-package com.ajira.ajirayaan.model;
+package com.ajira.ajirayaan.model.request;
 
+import com.ajira.ajirayaan.model.Item;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Performs {

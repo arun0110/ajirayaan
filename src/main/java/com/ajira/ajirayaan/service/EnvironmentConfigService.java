@@ -3,33 +3,34 @@ package com.ajira.ajirayaan.service;
 import com.ajira.ajirayaan.entity.AreaMap;
 import com.ajira.ajirayaan.entity.Environment;
 import com.ajira.ajirayaan.entity.EnvironmentUpdate;
-import com.ajira.ajirayaan.model.EnvironmentConfig;
-import com.ajira.ajirayaan.model.TerrainType;
+import com.ajira.ajirayaan.model.request.EnvironmentConfig;
+import com.ajira.ajirayaan.model.request.TerrainType;
 import com.ajira.ajirayaan.repository.AreaMapRepository;
-import com.ajira.ajirayaan.repository.EnvironmentConfigRepository;
 import com.ajira.ajirayaan.repository.EnvironmentRepository;
-import com.ajira.ajirayaan.repository.InventoryItemRepository;
-import com.ajira.ajirayaan.util.Convert;
-import com.ajira.ajirayaan.util.ModelToEntity;
+import com.ajira.ajirayaan.util.Converter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
+/**
+ * EnvironmentConfigService is for saving all the configurations
+ * related to Environment
+ */
 @Service
 public class EnvironmentConfigService {
 
     @Autowired
-    EnvironmentConfigRepository environmentConfigRepository;
-    @Autowired
     EnvironmentRepository environmentRepository;
     @Autowired
     AreaMapRepository areaMapRepository;
-    @Autowired
-    StatusResponseService statusResponseService;
 
+    /**
+     * saving environment configurations and also check if already exits
+     * @param environmentConfig environment configurations
+     * @return ERROR | SUCCESS
+     */
     public String saveEnvironmentConfig(EnvironmentConfig environmentConfig){
         if(isEnvironmentConfigurationExists()){
             return "ERROR";
@@ -39,6 +40,10 @@ public class EnvironmentConfigService {
         return "SUCCESS";
     }
 
+    /**
+     * Saving Environment details
+     * @param environmentConfig environment configurations
+     */
     public void saveEnvironment(EnvironmentConfig environmentConfig){
         Environment environment = new Environment();
         environment.setId(1L);
@@ -49,27 +54,60 @@ public class EnvironmentConfigService {
         environmentRepository.save(environment);
     }
 
+    /**
+     * deleting all the environment configurations
+     */
+    public void deleteEnvironmentConfig(){
+        areaMapRepository.deleteAll();
+        environmentRepository.deleteAll();
+    }
+
+    /**
+     * Checks if environment configurations already exists
+     * @return true | false
+     */
     public boolean isEnvironmentConfigurationExists(){
         Environment environment = getEnvironment();
         return Objects.nonNull(environment);
     }
 
+    /**
+     * Saving Area map after converting each row into string format
+     * @param areaMap 2D area map
+     */
     public void saveAreaMap(List<List<TerrainType>> areaMap){
-        areaMapRepository.saveAll(Convert.mapToString(areaMap));
+        areaMapRepository.saveAll(Converter.mapToString(areaMap));
     }
 
+    /**
+     * Getting Environment details
+     * @return environment
+     */
     public Environment getEnvironment(){
         return environmentRepository.findById(1L).orElse(null);
     }
 
+    /**
+     * Getting area map after converting string format into 2D area map
+     * @return
+     */
     public List<List<String>> getAreaMap(){
-        return Convert.stringToMap((List<AreaMap>) areaMapRepository.findAll());
+        return Converter.stringToMap((List<AreaMap>) areaMapRepository.findAll());
     }
 
+    /**
+     * getting area map boundaries
+     * @return area map row
+     */
     public AreaMap getAreaLimits(){
         return ((List<AreaMap>)areaMapRepository.findAll()).get(0);
     }
 
+    /**
+     * Updating Environment details separately
+     * @param update properties that needs to update
+     * @return SUCCESS
+     */
     public String updateEnvironment(EnvironmentUpdate update) {
         Environment environment = getEnvironment();
         if(Objects.nonNull(update.getTerrain())){
@@ -82,18 +120,12 @@ public class EnvironmentConfigService {
             environment.setTemperature(update.getTemperature());
         }
         if(Objects.nonNull(update.getStorm()) ){
-            if(update.getStorm() && statusResponseService.checkStormShield()){
-                return "ERROR";
-            }
             environment.setStorm(update.getStorm());
         }
         if(Objects.nonNull(update.getSolarFlare())){
             environment.setSolarFlare(update.getSolarFlare());
         }
         environmentRepository.save(environment);
-        statusResponseService.checkScenarios();
         return "SUCCESS";
     }
-
-
 }

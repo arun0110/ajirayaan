@@ -1,5 +1,7 @@
 package com.ajira.ajirayaan.model;
 
+import com.ajira.ajirayaan.model.request.InventoryItemType;
+
 public class Item {
     private InventoryItemType type;
     private int qty;

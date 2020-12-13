@@ -1,6 +1,6 @@
 package com.ajira.ajirayaan.entity;
 
-import com.ajira.ajirayaan.model.Action;
+import com.ajira.ajirayaan.model.request.Action;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

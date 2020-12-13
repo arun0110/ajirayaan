@@ -2,17 +2,21 @@ package com.ajira.ajirayaan.service;
 
 import com.ajira.ajirayaan.entity.*;
 import com.ajira.ajirayaan.model.*;
+import com.ajira.ajirayaan.model.request.Direction;
+import com.ajira.ajirayaan.model.request.RoverConfig;
 import com.ajira.ajirayaan.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+/**
+ * RoverConfigService is for saving all the configurations
+ * related to Rover
+ */
 @Service
 public class RoverConfigService {
 
@@ -26,16 +30,17 @@ public class RoverConfigService {
     PerformRepository performRepository;
     @Autowired
     ScenariosRepository scenariosRepository;
-    @Autowired
-    StatusResponseService statusResponseService;
 
-
+    /**
+     * Saving rover configurations
+     * @param roverConfig rover configuration JSON
+     * @return ERROR | SUCCESS
+     */
     public String saveRoverConfigurations(RoverConfig roverConfig){
         if(isRoverConfigurationsExists()){
             return "ERROR";
         }
         saveInventory(roverConfig);
-        saveRoverStatus(roverConfig);
         saveRoverStatus(roverConfig);
         saveStateAndActions(roverConfig);
         savePerform(roverConfig);
@@ -43,6 +48,21 @@ public class RoverConfigService {
         return "SUCCESS";
     }
 
+    /**
+     * deleting all the rover configurations
+     */
+    public void deleteRoverConfigurations(){
+        inventoryItemRepository.deleteAll();
+        roverStatusRepository.deleteAll();
+        stateAndActionRepository.deleteAll();
+        performRepository.deleteAll();
+        scenariosRepository.deleteAll();
+    }
+
+    /**
+     * Check if already rover configurations are initiated
+     * @return true | false
+     */
     public boolean isRoverConfigurationsExists(){
         RoverStatus roverStatus = getRoverStatus();
         if(Objects.nonNull(roverStatus)){
@@ -51,20 +71,31 @@ public class RoverConfigService {
         return false;
     }
 
+    /**
+     * Saving Inventory items
+     * @param roverConfig rover configurations
+     */
     public void saveInventory(RoverConfig roverConfig){
         inventoryItemRepository.saveAll(roverConfig.getInventory());
     }
 
+    /**
+     * saving Rover status like location and battery remaining
+     * @param roverConfig rover configurations
+     */
     public void saveRoverStatus(RoverConfig roverConfig){
         RoverStatus roverStatus = new RoverStatus();
         roverStatus.setId(1L);
         roverStatus.setRow(roverConfig.getDeployPoint().getRow());
         roverStatus.setCol(roverConfig.getDeployPoint().getColumn());
         roverStatus.setBattery(roverConfig.getInitialBattery());
-        statusResponseService.updateEnvironmentTerrain(new Location(roverStatus.getRow(),roverStatus.getCol()));
         roverStatusRepository.save(roverStatus);
     }
 
+    /**
+     * Saving State and Actions
+     * @param roverConfig rover configurations
+     */
     public void saveStateAndActions(RoverConfig roverConfig){
         List<StateAndAction> stateAndActionList = new ArrayList<>();
         roverConfig.getStates().forEach(state->{
@@ -78,6 +109,10 @@ public class RoverConfigService {
         stateAndActionRepository.saveAll(stateAndActionList);
     }
 
+    /**
+     * Saving Performs
+     * @param roverConfig rover configurations
+     */
     public void savePerform(RoverConfig roverConfig){
         List<Perform> performList = new ArrayList<>();
         roverConfig.getScenarios().forEach(scenario -> {
@@ -101,6 +136,10 @@ public class RoverConfigService {
         performRepository.saveAll(performList);
     }
 
+    /**
+     * Saving Scenarios
+     * @param roverConfig rover configurations
+     */
     public void saveScenarios(RoverConfig roverConfig){
         List<Scenarios> scenariosList = new ArrayList<>();
         roverConfig.getScenarios().forEach(scenario -> {
@@ -117,41 +156,29 @@ public class RoverConfigService {
         scenariosRepository.saveAll(scenariosList);
     }
 
-    public RoverStatus getRoverStatus(){
-        return roverStatusRepository.findById(1L).orElse(null);
-    }
-
+    /**
+     * getting all the inventory items
+     * @return list of inventory items
+     */
     public List<InventoryItem> getInventoryItems(){
         return (List<InventoryItem>) inventoryItemRepository.findAll();
     }
 
-    public String makeMove(Direction direction){
-        RoverStatus roverStatus = getRoverStatus();
-        Location currentLocation = new Location(roverStatus.getRow(), roverStatus.getCol());
-        Location locationAfterMove = getLocationAfterMove(direction,currentLocation);
-        String response = checkEnvironmentCondition();
-        if(response.equals("SUCCESS")){
-            response = checkAreaLimits(locationAfterMove);
-            if(response.equals("SUCCESS")){
-                roverStatus = updateLocation(roverStatus,locationAfterMove);
-                statusResponseService.updateEnvironmentTerrain(locationAfterMove);
-                statusResponseService.checkScenarios();
-                response = checkBatteryCondition(roverStatus);
-            }
-        }
-        return response;
+    /**
+     * getting Rover Status like location and battery remaining
+     * @return rover status
+     */
+    public RoverStatus getRoverStatus(){
+        return roverStatusRepository.findById(1L).orElse(null);
     }
 
-    public String checkBatteryCondition(RoverStatus roverStatus){
-        if(roverStatus.getBattery()<=0){
-            return "ERROR";
-        }
-        return "SUCCESS";
-    }
-
-
-
-    public RoverStatus updateLocation(RoverStatus roverStatus, Location newLocation){
+    /**
+     * Update Rover Status based on the given new location
+     * @param roverStatus current rover status
+     * @param newLocation new location
+     * @return updated rover status
+     */
+    public RoverStatus updateRoverStatus(RoverStatus roverStatus, Location newLocation){
         roverStatus.setRow(newLocation.getRow());
         roverStatus.setCol(newLocation.getColumn());
         roverStatus.setBattery(roverStatus.getBattery()-1);
@@ -159,68 +186,48 @@ public class RoverConfigService {
         return roverStatus;
     }
 
-
+    /**
+     * Saving Inventory items list
+     * @param inventoryItemList inventory items to save
+     */
     public void saveInventoryItemsList(List<InventoryItem> inventoryItemList){
         inventoryItemRepository.deleteAll();
         inventoryItemRepository.saveAll(inventoryItemList);
     }
+
+    /**
+     * getting all the inventory items present in the rover
+     * @return list of items
+     */
     public List<InventoryItem> getInventoryItemsList(){
         return (List<InventoryItem>) inventoryItemRepository.findAll();
     }
 
-    public String checkEnvironmentCondition(){
-        Environment environment = statusResponseService.getEnvironment();
-        if(environment.isStorm()){
-            return "Cannot move during a storm";
-        }
-        return "SUCCESS";
+    /**
+     * getting all the scenarios
+     * @return list of scenarios
+     */
+    public List<Scenarios> getScenarios(){
+        return (List<Scenarios>) scenariosRepository.findAll();
     }
 
-    public String checkAreaLimits(Location locationAfterMove){
-        AreaMap areaMapLimits = statusResponseService.getAreaLimits();
-        if(locationAfterMove.getColumn() > areaMapLimits.getColLimit() ||
-        locationAfterMove.getRow() > areaMapLimits.getRowLimit()){
-            return "Can move only within mapped area";
-        }
-        return "SUCCESS";
+    /**
+     * getting all the performs
+     * @return list of performs
+     */
+    public List<Perform> getPerforms(){
+        return (List<Perform>) performRepository.findAll();
     }
 
-    public Location getLocationAfterMove(Direction direction, Location currentLocation){
-        Location locationAfterMove = currentLocation;
-        switch (direction){
-            case UP:
-                locationAfterMove = moveUp(currentLocation);
-                break;
-            case DOWN:
-                locationAfterMove = moveDown(currentLocation);
-                break;
-            case LEFT:
-                locationAfterMove = moveLeft(currentLocation);
-                break;
-            case RIGHT:
-                locationAfterMove = moveRight(currentLocation);
-        }
-        return locationAfterMove;
-    }
-
-    public Location moveUp(Location currentLocation){
-        currentLocation.setRow(currentLocation.getRow()-1);
-        return currentLocation;
-    }
-
-    public Location moveDown(Location currentLocation){
-        currentLocation.setRow(currentLocation.getRow()+1);
-        return currentLocation;
-    }
-
-    public Location moveLeft(Location currentLocation){
-        currentLocation.setColumn(currentLocation.getColumn()-1);
-        return currentLocation;
-    }
-
-    public Location moveRight(Location currentLocation){
-        currentLocation.setColumn(currentLocation.getColumn()+1);
-        return currentLocation;
+    /**
+     * updating inventory items, it will remove items with 0 quantity
+     * @param inventoryItemList updated inventory items
+     */
+    public void updateInventoryItems(List<InventoryItem> inventoryItemList){
+        inventoryItemList = inventoryItemList.stream()
+                .filter(x->x.getQty()!=0)
+                .collect(Collectors.toList());
+        saveInventoryItemsList(inventoryItemList);
     }
 
 }

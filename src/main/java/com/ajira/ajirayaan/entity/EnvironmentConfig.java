@@ -1,14 +1,8 @@
 package com.ajira.ajirayaan.entity;
 
-import com.ajira.ajirayaan.model.TerrainType;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import org.hibernate.annotations.Type;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 public class EnvironmentConfig {

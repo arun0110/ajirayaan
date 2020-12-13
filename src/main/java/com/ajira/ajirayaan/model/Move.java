@@ -1,5 +1,6 @@
 package com.ajira.ajirayaan.model;
 
+import com.ajira.ajirayaan.model.request.Direction;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Move {

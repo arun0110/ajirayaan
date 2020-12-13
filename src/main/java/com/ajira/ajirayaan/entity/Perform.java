@@ -1,7 +1,6 @@
 package com.ajira.ajirayaan.entity;
 
-import com.ajira.ajirayaan.model.InventoryItemType;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.ajira.ajirayaan.model.request.InventoryItemType;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

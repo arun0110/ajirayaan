@@ -1,6 +1,6 @@
 package com.ajira.ajirayaan.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.ajira.ajirayaan.model.request.Action;
 
 import java.util.List;
 

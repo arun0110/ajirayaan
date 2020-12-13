@@ -1,10 +1,7 @@
-package com.ajira.ajirayaan.model;
+package com.ajira.ajirayaan.model.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 import java.util.ArrayList;
 import java.util.List;
 

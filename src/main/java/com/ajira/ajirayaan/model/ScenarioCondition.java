@@ -1,5 +1,7 @@
 package com.ajira.ajirayaan.model;
 
+import com.ajira.ajirayaan.model.request.Operator;
+
 public class ScenarioCondition {
     private String type;
     private String property;

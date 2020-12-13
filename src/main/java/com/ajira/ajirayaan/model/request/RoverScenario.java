@@ -1,4 +1,4 @@
-package com.ajira.ajirayaan.model;
+package com.ajira.ajirayaan.model.request;
 
 public class RoverScenario {
     private String is;
